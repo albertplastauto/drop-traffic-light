@@ -1,0 +1,10 @@
+# Shortcuts carry absolute paths, so they are useful only on the machine that
+# made them. Left out of the repository on purpose.
+*.lnk
+
+# The desktop screenshot has a third-party wallpaper behind the widget, so it
+# stays local. preview.png is our own render and is the one shipped.
+screenshot-desktop.png
+
+# Host log, written only with -Debug
+*.log

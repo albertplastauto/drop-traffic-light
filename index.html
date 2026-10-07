@@ -1,0 +1,563 @@
+<!doctype html>
+<!-- Drop Traffic Light - Author: Albert Kadantsev -->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Drop Traffic Light</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    /* Visible only when the file is opened in an ordinary browser window.
+       In desktop-icon mode the window itself is clipped to the case outline,
+       so this colour never shows. */
+    background: #05080b;
+    font-family: "Segoe UI", system-ui, sans-serif;
+    -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Case proportions: 54 : 46, width : height (horizontal, like the case lying down) */
+  :root { --w: min(100vw, calc(100vh * 1.17391304)); }
+
+  /* ============================== CASE ============================== */
+  .case {
+    --u: calc(var(--w) / 54);              /* 1u = 1/54 of the case width */
+
+    --c:    hsl(152 82% 52%);
+    --c-hi: hsl(152 88% 71%);
+    --c-lo: hsl(152 84% 30%);
+    --pulse: 4.4s;
+    --ghost: transparent;        /* unlit segments stay invisible: nothing behind the clock */
+    --shift: 6.4;                /* optical centre: dial and wordmark sit a little above the middle.
+                                    The wordmark is part of the same centred column, so when its
+                                    size grows the dial drops by half the growth - this value
+                                    compensates, keeping the dial itself on the centre line. */
+
+    /* mercury - the metal the clock bars are made of */
+    --metal-hi: #f7f9fb;
+    --metal:    #c4ccd4;
+    --metal-lo: #7f8992;
+
+    /* gold - the wordmark above the dial */
+    --gold-hi: #fbeaa4;
+    --gold:    #e3bf55;
+    --gold-lo: #8b6a18;
+
+    position: relative;
+    width:  var(--w);
+    height: calc(var(--w) * 0.85185185);
+    border-radius: calc(var(--w) * 0.24);   /* the desktop window uses the same radius */
+    overflow: hidden;                       /* colour never crosses the outline */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: calc(var(--u) * var(--shift));
+    cursor: pointer;
+    outline: none;
+
+    background: linear-gradient(178deg, var(--c-hi) 0%, var(--c) 46%, var(--c-lo) 100%);
+    box-shadow:
+      inset 0 calc(var(--u) * 0.35) 0 rgba(255, 255, 255, .55),
+      inset 0 calc(var(--u) * -3.4) calc(var(--u) * 5.5) rgba(0, 0, 0, .30),
+      inset 0 0 calc(var(--u) * 7) rgba(0, 0, 0, .16);
+    transition: filter .25s ease;
+  }
+  .case:hover  { filter: brightness(1.07) saturate(1.03); }
+  .case:active { filter: brightness(.93); }
+  .case:focus-visible { box-shadow: inset 0 0 0 calc(var(--u) * 0.55) rgba(255, 255, 255, .7); }
+
+  /* soft gloss across the top */
+  .sheen {
+    position: absolute;
+    left: 5%; right: 5%; top: 0; height: 48%;
+    background: radial-gradient(78% 100% at 50% 0%,
+                rgba(255, 255, 255, .58) 0%,
+                rgba(255, 255, 255, .12) 46%,
+                rgba(255, 255, 255, 0) 78%);
+    filter: blur(calc(var(--u) * 0.9));
+    pointer-events: none;
+  }
+  /* specular highlight */
+  .sheen::after {
+    content: '';
+    position: absolute; left: 15%; top: 7%;
+    width: 32%; height: 7%;
+    border-radius: 50%;
+    transform: rotate(-26deg);
+    background: radial-gradient(closest-side, rgba(255, 255, 255, .95), rgba(255, 255, 255, 0));
+    filter: blur(calc(var(--u) * 0.22));
+  }
+  /* inner light - a slow, calm heartbeat. The closer the phase is to a ban, the
+     quicker the beat, but it never becomes a flutter: the pulse is a two-beat
+     "lub-dub" followed by a long rest, at a resting heart rate. */
+  .light {
+    position: absolute; inset: 15%;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(255, 255, 255, .30), rgba(255, 255, 255, 0) 72%);
+    animation: heartbeat var(--pulse) ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes heartbeat {
+    0%   { opacity: .24 }     /* diastole - the rest between beats */
+    9%   { opacity: .47 }     /* lub */
+    19%  { opacity: .27 }
+    28%  { opacity: .40 }     /* dub, softer than the first beat */
+    44%  { opacity: .24 }
+    100% { opacity: .24 }
+  }
+
+  /* ============================= WORDMARK =============================
+     A dial-style brand plate: uppercase, wide tracking, gold with a dark
+     bronze rim. The rim is not decoration - gold alone disappears on the
+     yellow and turquoise phases. */
+  .brand {
+    position: relative; z-index: 2;
+    margin-bottom: calc(var(--u) * 2.5);
+    font-family: "Segoe UI", system-ui, sans-serif;
+    font-size: calc(var(--u) * 3.74);
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: .3em;
+    text-indent: .3em;            /* balances the tracking added after the last letter */
+    text-transform: uppercase;
+    white-space: nowrap;
+    background: linear-gradient(180deg, var(--gold-hi) 0%, var(--gold) 42%, var(--gold-lo) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-stroke: calc(var(--u) * 0.17) rgba(72, 49, 6, .62);
+    filter: drop-shadow(0 calc(var(--u) * 0.2) calc(var(--u) * 0.32) rgba(0, 0, 0, .45));
+    transition: opacity .25s ease;
+  }
+  .case.no-brand .brand { display: none; }
+
+  /* ================ CLOCK: seven-segment, no backing panel ================ */
+  .digits {
+    --dw: calc(var(--u) * 8.2);
+    --dh: calc(var(--u) * 14);
+    --t:  calc(var(--u) * 1.85);
+    --g:  calc(var(--u) * 0.6);   /* split between the upper and lower vertical bars */
+    position: relative; z-index: 2;
+    display: flex; align-items: center;
+    gap: calc(var(--u) * 1.05);
+    /* optical centring: see dialShift() in the logic - a leading "1" carries
+       its ink on the right of its cell, so the row is nudged left to keep the
+       visible margins equal. The nudge is animated, otherwise the dial would
+       jump sideways the moment the countdown passes ten hours. */
+    transform: translateX(calc(var(--u) * var(--dial-shift, 0)));
+    transition: transform .55s cubic-bezier(.4, 0, .2, 1);
+  }
+  .digit { position: relative; width: var(--dw); height: var(--dh); }
+
+  .seg {
+    position: absolute;
+    border-radius: calc(var(--u) * 0.55);
+    background: var(--ghost);
+    transition: background .6s linear, box-shadow .6s linear;
+  }
+  .seg.on {
+    background: linear-gradient(180deg, var(--metal-hi) 0%, var(--metal) 46%, var(--metal-lo) 100%);
+    box-shadow:
+      0 0 0 calc(var(--u) * 0.1) rgba(24, 30, 36, .38),
+      0 calc(var(--u) * 0.2) calc(var(--u) * 0.45) rgba(0, 0, 0, .30),
+      inset 0 calc(var(--u) * 0.09) 0 rgba(255, 255, 255, .85);
+  }
+
+  .seg.a { left: calc(var(--t) / 2); top: 0;    width: calc(var(--dw) - var(--t)); height: var(--t); }
+  .seg.g { left: calc(var(--t) / 2); top: calc(var(--dh) / 2 - var(--t) / 2); width: calc(var(--dw) - var(--t)); height: var(--t); }
+  .seg.d { left: calc(var(--t) / 2); bottom: 0; width: calc(var(--dw) - var(--t)); height: var(--t); }
+  .seg.f { left: 0;  top: calc(var(--g) / 2);    width: var(--t); height: calc(var(--dh) / 2 - var(--g)); }
+  .seg.b { right: 0; top: calc(var(--g) / 2);    width: var(--t); height: calc(var(--dh) / 2 - var(--g)); }
+  .seg.e { left: 0;  bottom: calc(var(--g) / 2); width: var(--t); height: calc(var(--dh) / 2 - var(--g)); }
+  .seg.c { right: 0; bottom: calc(var(--g) / 2); width: var(--t); height: calc(var(--dh) / 2 - var(--g)); }
+
+  /* vertical dots separator, like a Casio LCD colon */
+  .colon { position: relative; width: calc(var(--u) * 2); height: var(--dh); }
+  .colon i {
+    position: absolute; left: 0;
+    width: calc(var(--u) * 2); height: calc(var(--u) * 2);
+    border-radius: calc(var(--u) * 0.7);
+    background: linear-gradient(180deg, var(--metal-hi), var(--metal-lo));
+    box-shadow: 0 0 0 calc(var(--u) * 0.1) rgba(24, 30, 36, .40),
+                0 calc(var(--u) * 0.2) calc(var(--u) * 0.45) rgba(0, 0, 0, .3);
+    transition: opacity .25s linear;
+  }
+  .colon i:nth-child(1) { top: 21%; }
+  .colon i:nth-child(2) { bottom: 21%; }
+  .colon.blink i { opacity: .3; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .light { animation: none; opacity: .42; }
+    .colon.blink i { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<div class="case" id="case" role="img" tabindex="0" aria-label="Drop Traffic Light">
+  <div class="sheen" aria-hidden="true"></div>
+  <div class="light" aria-hidden="true"></div>
+  <div class="brand" aria-hidden="true">Harness</div>
+  <div class="digits" id="digits"></div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* =============================== LOGIC ===============================
+     The schedule belongs to a home zone: the peak windows are 04:00-07:00 and
+     09:00-13:00 there, Mon-Fri. Everything the widget shows is expressed in the
+     device's own time zone, so the same instants read as 03:00-06:00 on a
+     device in Berlin and as 11:00-14:00 on one in Sydney. Moscow keeps no
+     daylight saving, so the home zone is a constant offset. */
+  // ==LOGIC-START==
+  var BLEND = 120 * 1000;            // 120 s cross-fade, half before and half after a change
+  var REF_OFFSET_MIN = 180;          // UTC+3 - the home zone of the schedule
+
+  /* Where the ink of each digit starts inside its own cell, in u: a seven-segment
+     "1" keeps its bars on the right, "3" and "7" start half a bar-width late, and
+     the rest begin at the cell edge. The dial therefore has to be nudged left by
+     half of that offset, or it looks pushed to the right of the case - which is
+     what happens all the time, because the countdown so often starts with "1". */
+  var LEAD_INK_U = {
+    '0': 0, '1': 6.35, '2': 0, '3': 0.925, '4': 0,
+    '5': 0, '6': 0, '7': 0.925, '8': 0, '9': 0
+  };
+  function dialShift(text) {
+    return -(LEAD_INK_U[String(text).charAt(0)] || 0) / 2;
+  }
+
+  var STATES = {
+    green:  { h: 152, s: 82,  l: 52, name: 'OFF-PEAK',          pulse: '4.4s' },
+    yellow: { h: 45,  s: 100, l: 58, name: 'BEFORE PEAK',       pulse: '3.4s' },
+    red:    { h: 354, s: 96,  l: 60, name: 'PEAK \u00b7 RESTRICTED', pulse: '2.4s' },
+    aqua:   { h: 174, s: 84,  l: 54, name: 'PEAK ENDING',       pulse: '4.8s' }
+  };
+
+  /* Peak windows in the home zone, Mon-Fri: 04:00-07:00 and 09:00-13:00.
+     Yellow is the hour before a peak starts, turquoise the hour before it
+     ends, red is the peak itself (restricted), green is off-peak. */
+  var WEEKDAY_PLAN = [
+    [0,  'green'],  [3,  'yellow'], [4,  'red'],   [6,  'aqua'],
+    [7,  'green'],  [8,  'yellow'], [9,  'red'],   [12, 'aqua'], [13, 'green']
+  ];
+
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+
+  /* An instant given as a home-zone wall clock: `hour`:00 on the home-zone
+     calendar date (y, m, d). */
+  function refTime(y, m, d, hour) {
+    return Date.UTC(y, m, d, hour) - REF_OFFSET_MIN * 60000;
+  }
+  /* The home-zone calendar day that contains `now`, with its weekday. */
+  function refDay(now) {
+    var d = new Date(now + REF_OFFSET_MIN * 60000);
+    return { y: d.getUTCFullYear(), m: d.getUTCMonth(), d: d.getUTCDate(), wd: d.getUTCDay() };
+  }
+  function refDayShift(day, shift) {
+    var d = new Date(Date.UTC(day.y, day.m, day.d + shift));
+    return { y: d.getUTCFullYear(), m: d.getUTCMonth(), d: d.getUTCDate(), wd: d.getUTCDay() };
+  }
+  /* The dial always speaks the device's zone - that is what its owner reads. */
+  function hhmm(ms) {
+    var d = new Date(ms);
+    return pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+
+  /* Slices of one home-zone calendar day. Boundaries come from exact minute
+     offsets, so nothing here depends on the device's zone or on its daylight
+     saving jumps. */
+  function daySegments(day) {
+    var plan = (day.wd >= 1 && day.wd <= 5) ? WEEKDAY_PLAN : [[0, 'green']];
+    var segs = [];
+    for (var i = 0; i < plan.length; i++) {
+      var start = refTime(day.y, day.m, day.d, plan[i][0]);
+      var end = (i + 1 < plan.length)
+        ? refTime(day.y, day.m, day.d, plan[i + 1][0])
+        : refTime(day.y, day.m, day.d + 1, 0);
+      segs.push({ start: start, end: end, state: plan[i][1] });
+    }
+    return segs;
+  }
+
+  /* Continuous phase track: one day back and several days ahead (at a weekend
+     the next change can be more than 60 hours away). Neighbouring slices with
+     the same phase are merged, otherwise the countdown would reset at midnight
+     for no reason at all. */
+  function timeline(now) {
+    var base = refDay(now);
+    var segs = [];
+    for (var k = -1; k <= 5; k++) {
+      var parts = daySegments(refDayShift(base, k));
+      for (var i = 0; i < parts.length; i++) {
+        var last = segs[segs.length - 1];
+        if (last && last.state === parts[i].state && last.end === parts[i].start) {
+          last.end = parts[i].end;
+        } else {
+          segs.push({ start: parts[i].start, end: parts[i].end, state: parts[i].state });
+        }
+      }
+    }
+    return segs;
+  }
+
+  function segIndexAt(segs, t) {
+    for (var i = 0; i < segs.length; i++) {
+      if (t >= segs[i].start && t < segs[i].end) return i;
+    }
+    return 0;
+  }
+
+  function smooth(x) { return x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x); }
+
+  /* HSL blend along the shortest hue arc: the colour flows instead of
+     turning muddy in the middle. */
+  function mixHsl(a, b, t) {
+    var dh = ((b.h - a.h + 540) % 360) - 180;
+    return {
+      h: (a.h + dh * t + 360) % 360,
+      s: a.s + (b.s - a.s) * t,
+      l: a.l + (b.l - a.l) * t
+    };
+  }
+
+  function hsl(c, dl, ds) {
+    dl = dl || 0; ds = ds || 0;
+    var s = Math.max(0, Math.min(100, c.s + ds));
+    var l = Math.max(0, Math.min(100, c.l + dl));
+    return 'hsl(' + Math.round(c.h) + ' ' + Math.round(s) + '% ' + Math.round(l) + '%)';
+  }
+
+  /* Full state at the instant `now` (ms since epoch). */
+  function sample(now, segs) {
+    segs = segs || timeline(now);
+    var i = segIndexAt(segs, now);
+    var seg = segs[i];
+    var cur = STATES[seg.state];
+    var prev = i > 0 ? segs[i - 1] : null;
+    var next = i + 1 < segs.length ? segs[i + 1] : null;
+
+    var into = now - seg.start;
+    var left = seg.end - now;
+
+    /* The fade is centred on the boundary: exactly at the switch the colour
+       sits halfway between the old and the new one, so there is no step
+       anywhere in time. */
+    var color = cur;
+    if (prev && into < BLEND / 2) {
+      color = mixHsl(STATES[prev.state], cur, smooth(0.5 + into / BLEND));
+    } else if (next && left < BLEND / 2) {
+      color = mixHsl(cur, STATES[next.state], smooth(0.5 - left / BLEND));
+    }
+
+    var remain = Math.max(0, seg.end - now);
+    var totalMin = Math.floor(remain / 60000);
+
+    return {
+      index: i,
+      seg: seg,
+      state: seg.state,
+      name: cur.name,
+      pulse: cur.pulse,
+      color: color,
+      progress: Math.max(0, Math.min(1, into / (seg.end - seg.start))),
+      remainMs: remain,
+      cdText: pad2(Math.floor(totalMin / 60)) + ':' + pad2(totalMin % 60),
+      clockText: hhmm(now),
+      nextText: hhmm(seg.end)
+    };
+  }
+  // ==LOGIC-END==
+
+  /* ============================== RENDER ============================== */
+  var HARNESS_URL = 'http://127.0.0.1:19387';
+
+  var root     = document.getElementById('case');
+  var elDigits = document.getElementById('digits');
+
+  var SEGS = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
+  var MAP = {
+    '0': 'abcdef', '1': 'bc',     '2': 'abged',  '3': 'abgcd', '4': 'fgbc',
+    '5': 'afgcd',  '6': 'afgecd', '7': 'abc',    '8': 'abcdefg', '9': 'abcdfg'
+  };
+
+  var digitEls = [], colonEl = null, lastDigits = '', lastState = '';
+
+  (function buildDisplay() {
+    var html = '';
+    for (var i = 0; i < 4; i++) {
+      if (i === 2) html += '<span class="colon" id="colon"><i></i><i></i></span>';
+      html += '<span class="digit">' +
+        SEGS.map(function (s) { return '<i class="seg ' + s + '"></i>'; }).join('') +
+        '</span>';
+    }
+    elDigits.innerHTML = html;
+    digitEls = Array.prototype.slice.call(elDigits.querySelectorAll('.digit'));
+    colonEl = document.getElementById('colon');
+  })();
+
+  function setDigits(hhmmText) {
+    var txt = hhmmText.replace(':', '');
+    if (txt === lastDigits) return;
+    lastDigits = txt;
+    root.style.setProperty('--dial-shift', dialShift(txt));
+    for (var d = 0; d < 4; d++) {
+      var on = MAP[txt.charAt(d)] || '';
+      var segs = digitEls[d].children;
+      for (var s = 0; s < 7; s++) {
+        var cls = 'seg ' + SEGS[s] + (on.indexOf(SEGS[s]) >= 0 ? ' on' : '');
+        if (segs[s].className !== cls) segs[s].className = cls;
+      }
+    }
+  }
+
+  function applyColor(c) {
+    root.style.setProperty('--c',    hsl(c));
+    root.style.setProperty('--c-hi', hsl(c, +19, -6));
+    root.style.setProperty('--c-lo', hsl(c, -22, +4));
+  }
+
+  function render(s, utcNow) {
+    applyColor(s.color);
+    root.style.setProperty('--pulse', s.pulse);
+
+    setDigits(s.cdText);
+
+    /* one-second tick of the separator dots, the way a Casio does it */
+    if (colonEl && !frozen) {
+      colonEl.className = 'colon' + (new Date(utcNow).getSeconds() % 2 ? ' blink' : '');
+    }
+
+    /* The case carries no visible text: the colour is the message. Still,
+       screen readers and the window title deserve the actual state.
+
+       In host mode (?host=1) the title instead reports the exact viewport
+       size. Chromium draws its own title bar *inside* the client area, so the
+       host cannot learn the real viewport from Win32 alone - it needs this
+       number to clip the window to the case outline and nothing else. */
+    document.title = HOSTED
+      ? 'Drop Traffic Light |' + window.innerWidth + 'x' + window.innerHeight + '@' + window.devicePixelRatio
+      : 'Drop Traffic Light \u00b7 ' + s.cdText;
+    if (s.state !== lastState || s.cdText !== lastDigits) {
+      lastState = s.state;
+      root.setAttribute('aria-label',
+        'Drop Traffic Light: ' + s.name + '. Local time ' + s.clockText +
+        ', ' + s.cdText + ' until the next change');
+    }
+  }
+
+  /* ===================== ?now= OVERRIDE (FOR CHECKS ONLY) =====================
+     ?now=2026-10-07T06:30 or ?now=06:30 freezes the clock in the device's
+     time zone. Used to preview every state and to take screenshots.       */
+  var query = new URLSearchParams(location.search);
+  var hashQuery = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+  var frozen = null;
+
+  /* ?brand=0 (or #brand=0) hides the wordmark above the dial */
+  if (query.get('brand') === '0' || hashQuery.get('brand') === '0') {
+    document.getElementById('case').classList.add('no-brand');
+  }
+
+  /* Host mode: the desktop host passes ?host=1&w=<pixels>&m=<margin>. The case
+     then gets a fixed size instead of scaling with the viewport, which keeps
+     the icon exactly the requested width even if the browser refuses to shrink
+     its window that far. It is also pinned to a known corner: the host makes
+     the window larger than the screen, so the browser chrome (its own title bar
+     and the invisible frame it keeps around the client area) ends up off-screen
+     and only the clipped case stays visible. */
+  var HOSTED = query.get('host') === '1';
+  var HOST_MARGIN = 64;
+
+  /* Background is independent of host mode. Two hosts ask for two different
+     things: the WebView2 host wants a fully transparent page (#bg=none) so the
+     window itself can be transparent, while the Chrome fallback keys out a
+     solid colour (#bg=rrggbb). */
+  var bg = query.get('bg') || hashQuery.get('bg') || '';
+  if (bg === 'none') {
+    document.documentElement.style.background = 'transparent';
+    document.body.style.background = 'transparent';
+  } else {
+    bg = bg.replace(/[^0-9a-fA-F]/g, '');
+    if (bg.length === 6) document.body.style.background = '#' + bg;
+  }
+
+  (function () {
+    if (!HOSTED) return;
+    var w = parseInt(query.get('w'), 10);
+    var m = parseInt(query.get('m'), 10);
+    if (m >= 8 && m <= 400) HOST_MARGIN = m;
+    if (w >= 40 && w <= 2000) {
+      /* never larger than the viewport, so the case can never be clipped */
+      document.documentElement.style.setProperty('--w',
+        'min(' + w + 'px, 100vw, calc(100vh * 1.17391304))');
+    }
+    root.style.position = 'fixed';
+    root.style.top = HOST_MARGIN + 'px';
+    root.style.right = HOST_MARGIN + 'px';
+  })();
+  (function () {
+    var v = query.get('now');
+    if (!v) return;
+    var iso = v;
+    if (/^\d{1,2}:\d{2}$/.test(v)) {
+      var d = new Date();
+      iso = pad2(d.getFullYear()) + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) +
+            'T' + (v.length === 4 ? '0' + v : v);
+    }
+    var t = Date.parse(iso);          // no zone given -> local time
+    if (!isNaN(t)) { frozen = t; colonEl.className = 'colon'; }
+  })();
+
+  function tick() {
+    var utcNow = (frozen === null) ? Date.now() : frozen;
+    render(sample(utcNow), utcNow);
+  }
+
+  /* ============================== CLICK ==============================
+     In the desktop host the click is handled natively by the window itself (see
+     widget-host.ps1: dragging and clicking are done by Windows), so this handler
+     is what makes the widget work when the file is opened in a browser.
+
+     Note: window.open with 'noopener' always returns null, so the fallback
+     below would fire every time and navigate the widget itself away. */
+  function openHarness() {
+    var w = window.open(HARNESS_URL, '_blank');
+    if (w) {
+      try { w.opener = null; } catch (e) { /* not critical */ }
+    } else {
+      location.href = HARNESS_URL;          // pop-ups are blocked
+    }
+  }
+  root.addEventListener('click', openHarness);
+  root.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+      e.preventDefault();
+      openHarness();
+    }
+  });
+
+  /* Update once a second, aligned to the second boundary. */
+  tick();
+  setTimeout(function () {
+    tick();
+    setInterval(tick, 1000);
+  }, 1000 - (Date.now() % 1000));
+
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) tick();
+  });
+  /* the host resizes the window after loading, so keep the title (and with it
+     the reported viewport) up to date */
+  window.addEventListener('resize', tick);
+})();
+</script>
+</body>
+</html>
