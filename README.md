@@ -249,6 +249,14 @@ Albert Kadantsev
 Every source file carries the same line at the top, and the widget picture
 (`widget.ico`, `icon.png`) is rendered from the widget itself.
 
+## Contact
+
+Questions, ideas and bug reports are welcome:
+
+* open an [issue](https://github.com/albertplastauto/drop-traffic-light/issues) —
+  the best channel, because the answer then helps everyone;
+* or write to **albert.plastauto@gmail.com**.
+
 ## License
 
 MIT — see [LICENSE](LICENSE). Use it, change it, ship it; just keep the
