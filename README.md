@@ -102,6 +102,14 @@ entry. To get rid of it, run **`delete-widget.bat`** — or use the menu below,
 like deleting an icon from the desktop. Running `start-widget.bat` twice will
 not create a second widget.
 
+### Start with Windows
+
+Put a shortcut to `start-widget.bat` in your Startup folder: press `Win+R`, type
+`shell:startup`, drop the shortcut in there and give it `widget.ico` as its icon.
+At every logon the widget comes back exactly where you last dragged it. If it is
+already running, the second launch quietly does nothing, so the same shortcut is
+safe to click at any time. To stop starting it with Windows, delete that shortcut.
+
 ### How it behaves
 
 | Action | Result |
