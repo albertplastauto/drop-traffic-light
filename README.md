@@ -7,6 +7,13 @@ panels, no window.
 
 ![Four states](preview.png)
 
+## Download
+
+**[Latest release →](https://github.com/albertplastauto/drop-traffic-light/releases/latest)** —
+one ZIP with everything, no Git needed. Unpack it anywhere and run
+`start-widget.bat`. The release ZIP is exactly the files in this repository at
+the tagged version.
+
 ## What it does
 
 | Tile colour | When (local time) | Meaning |
