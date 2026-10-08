@@ -1,5 +1,5 @@
 @echo off
-rem  Author: Albert Kadantsev
+rem  Author: Albert Kadantsev - developed with assistance from DeepSeek-V4.1-Flash
 rem ============================================================
 rem  Drop Traffic Light - remove the widget from the desktop.
 rem ============================================================

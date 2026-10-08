@@ -1,6 +1,6 @@
 # ============================================================================
 #  Drop Traffic Light - desktop widget host (Windows, WebView2).
-#  Author: Albert Kadantsev
+#  Author: Albert Kadantsev - developed with assistance from DeepSeek-V4.1-Flash
 #
 #  Owns the window itself, so the widget can be genuinely frameless and
 #  transparent: no title bar, no border, no taskbar button, and none of the

@@ -250,12 +250,20 @@ The catch is that Windows caches icons aggressively (`ie4uinit.exe -show` and a
 have to be re-implemented in GDI+. Recorded here so the idea survives — it was
 the owner's preferred direction, deferred in favour of the WebView2 host.
 
-## Authors
+## Author
 
-Albert Kadantsev
+Albert Kadantsev — the copyright holder.
 
-Every source file carries the same line at the top, and the widget picture
-(`widget.ico`, `icon.png`) is rendered from the widget itself.
+The design decisions, the architecture, every review and every integration were
+made by the human author, who is responsible for the code in this repository.
+
+## With assistance from
+
+Development was carried out with the help of **DeepSeek-V4.1-Flash**, an AI
+assistant. It is credited here as a tool, not as an author or rights holder:
+under copyright law only a natural person can own the work. Every source file
+carries the same line at the top, and the widget picture (`widget.ico`,
+`icon.png`) is rendered from the widget itself.
 
 ## Contact
 
@@ -267,5 +275,5 @@ Questions, ideas and bug reports are welcome:
 
 ## License
 
-MIT — see [LICENSE](LICENSE). Use it, change it, ship it; just keep the
-authorship notice.
+MIT, © 2026 Albert Kadantsev — see [LICENSE](LICENSE). Use it, change it, ship
+it; just keep the copyright notice.

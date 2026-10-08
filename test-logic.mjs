@@ -1,7 +1,7 @@
 /* Phase-logic tests. Run:
      <bundled-node> test-logic.mjs
 
-   Drop Traffic Light - Author: Albert Kadantsev
+   Drop Traffic Light - Author: Albert Kadantsev (with assistance from DeepSeek-V4.1-Flash)
 
    The logic is extracted straight out of index.html between the
    ==LOGIC-START/END== markers, so what is tested is exactly what the widget

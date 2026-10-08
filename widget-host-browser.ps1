@@ -1,6 +1,6 @@
 # ============================================================================
 #  Drop Traffic Light - desktop widget host (Windows).
-#  Author: Albert Kadantsev
+#  Author: Albert Kadantsev - developed with assistance from DeepSeek-V4.1-Flash
 #
 #  Runs index.html in its own browser window and turns that window into an icon
 #  that sits on the desktop like a shortcut:
